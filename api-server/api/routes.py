@@ -10,7 +10,8 @@ from flask import jsonify
 def index():
     
     ftx = ftx_call.api
-    data = json.dumps(ftx.get_funding_payment())
+    data = json.dumps(ftx.get_funding_payment(start_time=1637139600, end_time=round(datetime.datetime.now().timestamp())))
+    print(len(ftx.get_funding_payment(start_time=1637139600, end_time=round(datetime.datetime.now().timestamp()))))
     return '{}'.format(data) 
 
 
@@ -19,13 +20,23 @@ def insert_data():
 
     ftx = ftx_call.api
     res = db.session.query(func.max(PaymentInfo.id).label('max_id_in_db')).one()
+    temp = 0
+    if res.max_id_in_db != None:
+        temp = res.max_id_in_db
     data_list = []
-    
-    for data in ftx.get_funding_payment():
-        if data['id'] > res.max_id_in_db:
+
+    if res.max_id_in_db == None:
+        for data in ftx.get_funding_payment(start_time=1637139600, end_time=round(datetime.datetime.now().timestamp())): 
             payment_info = PaymentInfo(id=data['id'], future=data['future'], payment=data['payment'], time=data['time'], rate=data['rate'])
-            data_list.append(payment_info)
-    # print(len(data_list))
+            data_list.append(payment_info)    
+    else:
+        for data in ftx.get_funding_payment(): 
+            if data['id'] > temp:
+                payment_info = PaymentInfo(id=data['id'], future=data['future'], payment=data['payment'], time=data['time'], rate=data['rate'])
+                data_list.append(payment_info)
+    # for data in ftx.get_funding_payment(start_time=1637139600, end_time=round(datetime.datetime.now().timestamp())): 
+    #         payment_info = PaymentInfo(id=data['id'], future=data['future'], payment=data['payment'], time=data['time'], rate=data['rate'])
+    #         data_list.append(payment_info)
     db.session.add_all(data_list)
     db.session.commit()
     # data = json.dumps(ftx.get_funding_payment())
