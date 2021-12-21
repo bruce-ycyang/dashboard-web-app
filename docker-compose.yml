@@ -31,6 +31,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  web:
+    build: frontend-server
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
+    networks:
+      - flask_network
+
 networks:
   flask_network:
 
